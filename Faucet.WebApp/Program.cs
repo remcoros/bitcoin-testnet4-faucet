@@ -50,7 +50,9 @@ builder.Services.AddOpenIddict()
 
         // Register the ASP.NET Core host and configure the ASP.NET Core-specific options.
         options.UseAspNetCore()
-            .EnableRedirectionEndpointPassthrough();
+            .EnableRedirectionEndpointPassthrough()
+            // our container doesn't use SSL
+            .DisableTransportSecurityRequirement();
 
         // Register the System.Net.Http integration and use the identity of the current
         // assembly as a more specific user agent, which can be useful when dealing with

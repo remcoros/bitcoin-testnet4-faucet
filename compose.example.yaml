@@ -3,6 +3,7 @@
     image: faucet.webapp
     container_name: faucet.webapp
     hostname: faucet.webapp
+    restart: always
     build:
       context: .
       dockerfile: Faucet.WebApp/Dockerfile
