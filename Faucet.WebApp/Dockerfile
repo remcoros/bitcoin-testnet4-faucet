@@ -3,6 +3,7 @@ USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
+VOLUME /app/data
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
@@ -24,4 +25,5 @@ RUN apt-get update && apt-get install avahi-utils -y
 
 WORKDIR /app
 COPY --from=publish /app/publish .
+
 ENTRYPOINT ["dotnet", "Faucet.WebApp.dll"]

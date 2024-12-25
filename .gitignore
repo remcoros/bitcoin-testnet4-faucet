@@ -4,6 +4,6 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 *.DotSettings.user
-/Faucet.WebApp/app.db*
+/Faucet.WebApp/data/app.db*
 /Faucet.Tests/Private/*
 .env
