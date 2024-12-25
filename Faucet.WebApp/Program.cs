@@ -4,6 +4,7 @@ using Faucet.Wallet;
 using Microsoft.EntityFrameworkCore;
 using Faucet.WebApp.Routes;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -101,6 +102,11 @@ builder.Services.AddSingleton<FaucetWallet>();
 builder.Services.AddScoped<FaucetServices>();
 
 var app = builder.Build();
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedProto
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
