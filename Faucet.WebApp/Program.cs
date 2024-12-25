@@ -125,11 +125,12 @@ app.MapAuthentication();
 // Migrations
 using (var scope = app.Services.CreateScope())
 {
-    var log = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    var log = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Faucet");
     var db = scope.ServiceProvider.GetRequiredService<FaucetDbContext>();
 
     log.LogInformation("Applying migrations...");
     await db.Database.MigrateAsync();
+    log.LogInformation("Migrations applied");
 }
 
 await app.RunAsync();
