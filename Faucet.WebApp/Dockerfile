@@ -18,6 +18,10 @@ ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "Faucet.WebApp.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
+
+USER 0
+RUN apt-get update && apt-get install avahi-utils -y
+
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Faucet.WebApp.dll"]

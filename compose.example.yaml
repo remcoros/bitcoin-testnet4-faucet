@@ -8,3 +8,7 @@
       context: .
       dockerfile: Faucet.WebApp/Dockerfile
     env_file: ".env"
+    # for mDNS support
+    volumes:
+      - /var/run/dbus:/var/run/dbus
+      - /var/run/avahi-daemon/socket:/var/run/avahi-daemon/socket
