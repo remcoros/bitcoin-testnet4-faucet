@@ -1,0 +1,125 @@
+﻿@page
+@using NBitcoin
+@inject FaucetOptions FaucetOptions
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="col-lg-8 offset-md-2 text-center">
+    <h1 class="display-4">Bitcoin Testnet4 Faucet</h1>
+
+    <div class="mt-3 pt-4 border-top">
+        @if (!Model.IsUserAuthenticated)
+        {
+            <a class="btn btn-primary" asp-route="github-signin">
+                <i class="bi bi-github"></i> Authorize with GitHub
+            </a>
+            <a class="btn btn-primary" asp-route="discord-signin">
+                <i class="bi bi-discord"></i> Authorize with Discord
+            </a>
+        }
+
+        @if (Model.IsUserAuthenticated)
+        {
+            @if (Model.PayoutSuccessful)
+            {
+                <p class="alert alert-success alert-dismissible fade show col-10 offset-1">
+                    Coins sent successfully. Transaction id:
+                    <a href="https://mempool.space/testnet4/tx/@Model.TransactionId" target="_blank" class="">
+                        <small>@Model.TransactionId</small>
+                    </a>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </p>
+            }
+            else
+            {
+                @if (Model.IsUserEligible)
+                {
+                    <p class="alert alert-success alert-dismissible fade show col-10 offset-1">
+                        Authorization successful. Request testnet4 coins below.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </p>
+                }
+                else
+                {
+                    <p class="alert alert-warning alert-dismissible fade show col-10 offset-1">
+                        @Model.NotEligibleReason
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </p>
+                }
+            }
+        }
+    </div>
+    <form method="post" class="pt-3 pb-3 text-start" id="faucetForm" novalidate>
+        <fieldset class="col-lg-10 offset-lg-1 form-fieldset @(Model.IsUserEligible ? "" : "disabled")">
+            <div class="input-group has-validation">
+                <span class="input-group-text" id="addressLabel">Address</span>
+                <input type="text"
+                       class="form-control @(ViewData.ModelState[nameof(Model.ReceivingAddress)]?.Errors.Count > 0 ? "is-invalid" : "")"
+                       id="ReceivingAddress" name="ReceivingAddress" placeholder="tb1q..." aria-label="Address"
+                       aria-describedby="addressLabel">
+                <button class="btn btn-outline-primary" type="submit">Request Testnet4 Coins</button>
+                <div class="invalid-feedback">
+                    <span asp-validation-for="ReceivingAddress" class="text-danger"></span>
+                </div>
+            </div>
+        </fieldset>
+    </form>
+    @if (Model.TransactionHistory.Count > 0 && !Model.PayoutSuccessful)
+    {
+        <div class="pb-3">
+            <h5 class="text-muted">Transaction history:</h5>
+            <ul class="list-unstyled">
+                @foreach (var transaction in Model.TransactionHistory)
+                {
+                    <li>
+                        <a href="https://mempool.space/testnet4/tx/@transaction.TransactionId" target="_blank"
+                           class="">
+                            <small>@transaction.TransactionId</small>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+    <div class="border-bottom"></div>
+    <div class="col-lg-10 offset-lg-1 mt-3 text-start">
+        <h2>About</h2>
+        <p>
+            Log in with GitHub to request coins. Provide your testnet4 address, and the faucet will try to send funds
+            immediately. Please return unused coins to: <code>@FaucetOptions.FaucetAddress</code>
+        </p>
+        <p>
+            Payouts follow an exponential decay model. The earlier you are, the more coins you get, starting at
+            @(Money.Satoshis(FaucetOptions.InitialPayout).ToUnit(MoneyUnit.BTC)) tBTC, decaying
+            to @(Money.Satoshis(FaucetOptions.MinimumPayout).ToUnit(MoneyUnit.BTC)) tBTC.
+        </p>
+        
+        <h2>Privacy</h2>
+        <p>
+            The faucet uses GitHub OAuth to authenticate users. It does not store any personal information. A unique
+            irreversible hash based on your GitHub user id and a salt is stored to track past payouts to prevent
+            abuse. This hash is not reversible and cannot be used to identify a user.
+        </p>
+
+        <h2>Contact</h2>
+        <p>
+            For questions, feedback, or to report issues, please create an issue on
+            <a href="https://github.com/remcoros/bitcoin-testnet4-faucet" target="_blank">GitHub</a>.
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial"/>
+
+    <script>
+        document.getElementById('faucetForm').addEventListener('submit', function () {
+            const fieldset = document.querySelector('fieldset');
+            const submitButton = fieldset.querySelector('button[type="submit"]');
+            fieldset.classList.add('disabled');
+            submitButton.innerHTML = '<i class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></i> Please wait...';
+        });
+    </script>
+}

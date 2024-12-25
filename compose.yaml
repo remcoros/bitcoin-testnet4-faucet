@@ -1,0 +1,9 @@
+﻿services:
+  faucet.webapp:
+    image: faucet.webapp
+    container_name: faucet.webapp
+    hostname: faucet.webapp
+    build:
+      context: .
+      dockerfile: Faucet.WebApp/Dockerfile
+    env_file: ".env"

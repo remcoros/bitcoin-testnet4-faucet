@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>aspnet-Faucet.WebApp-3c54ab73-52d9-4be9-b437-b784c017561a</UserSecretsId>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AspNet.Security.OAuth.GitHub" Version="9.0.0" />
+        <PackageReference Include="Discord.Net" Version="3.17.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.0"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.0"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0"/>
+        <PackageReference Include="NBitcoin" Version="7.0.46" />
+        <PackageReference Include="OpenIddict.AspNetCore" Version="6.0.0" />
+        <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="6.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Faucet\Faucet.csproj" />
+    </ItemGroup>
+
+</Project>

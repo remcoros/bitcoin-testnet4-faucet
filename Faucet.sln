@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Faucet.Tests", "Faucet.Tests\Faucet.Tests.csproj", "{2B134F58-FEDD-47B7-96FB-11ACE4702B71}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Faucet.WebApp", "Faucet.WebApp\Faucet.WebApp.csproj", "{790A6CD3-7DE2-4B27-8F19-E6DF58C942DC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F663B893-C91D-4288-B504-346225F898D5}"
+	ProjectSection(SolutionItems) = preProject
+		compose.yaml = compose.yaml
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Faucet", "Faucet\Faucet.csproj", "{84777666-96F6-4F3E-9015-45EE7C49C0DA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2B134F58-FEDD-47B7-96FB-11ACE4702B71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B134F58-FEDD-47B7-96FB-11ACE4702B71}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B134F58-FEDD-47B7-96FB-11ACE4702B71}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B134F58-FEDD-47B7-96FB-11ACE4702B71}.Release|Any CPU.Build.0 = Release|Any CPU
+		{790A6CD3-7DE2-4B27-8F19-E6DF58C942DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{790A6CD3-7DE2-4B27-8F19-E6DF58C942DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{790A6CD3-7DE2-4B27-8F19-E6DF58C942DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{790A6CD3-7DE2-4B27-8F19-E6DF58C942DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84777666-96F6-4F3E-9015-45EE7C49C0DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84777666-96F6-4F3E-9015-45EE7C49C0DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84777666-96F6-4F3E-9015-45EE7C49C0DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84777666-96F6-4F3E-9015-45EE7C49C0DA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
