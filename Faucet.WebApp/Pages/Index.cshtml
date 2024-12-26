@@ -70,7 +70,8 @@
                 </div>
             </div>
             <button class="btn btn-outline-primary d-block d-md-none" type="submit">Request Testnet4 Coins</button>
-            <div class="d-grid">
+            <div class="text-center text-muted small">
+                <span>balance: @Model.WalletBalance.ToUnit(MoneyUnit.BTC)</span>
             </div>
         </fieldset>
     </form>
@@ -78,7 +79,7 @@
     {
         <div class="pb-3">
             <h5 class="text-muted">Transaction history:</h5>
-            <ul class="list-unstyled">
+            <ul class="list-unstyled text-truncate">
                 @foreach (var transaction in Model.TransactionHistory)
                 {
                     <li>

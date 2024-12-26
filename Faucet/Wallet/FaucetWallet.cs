@@ -1,7 +1,9 @@
 ﻿using System.Net;
 using System.Text;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using NBitcoin;
 using NBitcoin.RPC;
 
@@ -9,19 +11,23 @@ namespace Faucet.Wallet;
 
 public class FaucetWallet
 {
+    private const string WalletBalanceCacheKey = nameof(WalletBalanceCacheKey);
+    
     private readonly Network _network = Bitcoin.Instance.Testnet4;
     private readonly FaucetOptions _options;
     private readonly BitcoinAddress _faucetAddress;
     private readonly SemaphoreSlim _walletLock = new(1, 1);
     private readonly RPCClient _rpcClient;
     private readonly byte[]? _opReturnData;
-    private ILogger<FaucetWallet> _log;
-
+    private readonly ILogger<FaucetWallet> _log;
+    private readonly IMemoryCache _memoryCache;
+    
     public FeeRate FeeRate { get; } = new(1m);
 
-    public FaucetWallet(ILogger<FaucetWallet> log, IOptions<FaucetOptions> options)
+    public FaucetWallet(ILogger<FaucetWallet> log, IOptions<FaucetOptions> options, IMemoryCache memoryCache)
     {
         _log = log;
+        _memoryCache = memoryCache;
         _options = options.Value;
         _rpcClient = CreateRpcClient();
         
@@ -66,6 +72,8 @@ public class FaucetWallet
             
             var transaction = await BuildTransactionAsync(receivingAddress, amount, cancellationToken);
             var transactionId = await BroadcastTransactionAsync(transaction, cancellationToken);
+
+            _memoryCache.Remove(WalletBalanceCacheKey);
             
             return transactionId;
         }
@@ -138,5 +146,16 @@ public class FaucetWallet
             .WithCancellation(cancellationToken);
 
         return unspentCoins.OrderByDescending(x => x.Confirmations).ToList();
+    }
+
+    public async Task<Money> GetBalanceAsync(CancellationToken cancellationToken = default)
+    {
+        return await _memoryCache.GetOrCreateAsync(WalletBalanceCacheKey, async entry =>
+        {
+            entry.SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+
+            var unspent = await GetUnspentCoinsAsync(cancellationToken);
+            return unspent.Sum(x => x.Amount);
+        });
     }
 }

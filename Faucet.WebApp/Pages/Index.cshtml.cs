@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Faucet.Authentication;
 using Faucet.Data;
 using Faucet.DataAnnotations;
+using Faucet.Wallet;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -9,28 +10,24 @@ using NBitcoin;
 
 namespace Faucet.WebApp.Pages;
 
-public class IndexModel(ILogger<IndexModel> log, FaucetServices faucetServices, FaucetDbContext dbContext) : PageModel
+public class IndexModel(ILogger<IndexModel> log, FaucetServices faucetServices, FaucetWallet wallet, FaucetDbContext dbContext) : PageModel
 {
     [Required(ErrorMessage = "Receiving address is required.")]
     [ValidBitcoinTestNetAddress]
     [BindProperty]
     public string ReceivingAddress { get; set; } = string.Empty;
-    
+    public Money WalletBalance { get; set; } = Money.Satoshis(0);
     public bool IsUserAuthenticated { get; set; }
-    
     public bool IsUserEligible { get; set; }
-    
     public string? NotEligibleReason { get; set; }
-
     public bool PayoutSuccessful { get; set; }
-
     public string? TransactionId { get; set; }
-
     public List<TransactionHistoryEntry> TransactionHistory { get; set; } = new();
 
-    public async Task<IActionResult> OnGetAsync()
+
+    public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
     {
-        await InitializeAsync();
+        await InitializeAsync(cancellationToken);
 
         if (User.Identity?.IsAuthenticated == true)
         {
@@ -61,7 +58,7 @@ public class IndexModel(ILogger<IndexModel> log, FaucetServices faucetServices, 
         }
         
         // Initialize some properties
-        await InitializeAsync();
+        await InitializeAsync(cancellationToken);
         
         // Check if user is still eligible (this is set in InitializeAsync)
         if (!IsUserEligible)
@@ -109,7 +106,7 @@ public class IndexModel(ILogger<IndexModel> log, FaucetServices faucetServices, 
         }
     }
 
-    private async Task InitializeAsync()
+    private async Task InitializeAsync(CancellationToken cancellationToken)
     {
         if (User.Identity?.IsAuthenticated == true)
         {
@@ -121,5 +118,7 @@ public class IndexModel(ILogger<IndexModel> log, FaucetServices faucetServices, 
             IsUserEligible = eligible;
             NotEligibleReason = reason;
         }
+
+        WalletBalance = await wallet.GetBalanceAsync(cancellationToken);
     }
 }
