@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Faucet.Authentication;
 using Faucet.Data;
+using Faucet.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,7 @@ namespace Faucet.WebApp.Pages;
 public class IndexModel(ILogger<IndexModel> log, FaucetServices faucetServices, FaucetDbContext dbContext) : PageModel
 {
     [Required(ErrorMessage = "Receiving address is required.")]
+    [ValidBitcoinTestNetAddress]
     [BindProperty]
     public string ReceivingAddress { get; set; } = string.Empty;
     
@@ -67,22 +69,23 @@ public class IndexModel(ILogger<IndexModel> log, FaucetServices faucetServices, 
             return RedirectToPage();
         }
 
+        if (!ModelState.IsValid)
+        {
+            return Page();
+        }
+
         // Validation
         BitcoinAddress receivingAddress = null!;
         try
         {
             receivingAddress = BitcoinAddress.Create(ReceivingAddress, Bitcoin.Instance.Testnet4);
         }
-        catch (FormatException)
+        catch (Exception)
         {
             ModelState.AddModelError(nameof(ReceivingAddress), "Invalid receiving address.");
-        }
-
-        if (!ModelState.IsValid)
-        {
             return Page();
         }
-        
+
         // Send coins
         try
         {

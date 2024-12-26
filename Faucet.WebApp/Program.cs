@@ -60,30 +60,59 @@ builder.Services.AddOpenIddict()
         // providers that use the user agent as a way to throttle requests (e.g Reddit).
         options.UseSystemNetHttp()
             .SetProductInformation(typeof(Program).Assembly);
-        
-        // Register the GitHub integration.
-        options.UseWebProviders()
-            .AddGitHub(github =>
+
+        // Register the OAuth providers.
+        var webProviders = options.UseWebProviders();
+        var gitHubClientId = config.GetValue<string>("GitHub:ClientId") ??
+                             throw new InvalidOperationException("GitHub:ClientId not specified");
+        if (!string.IsNullOrEmpty(gitHubClientId))
+        {
+            webProviders
+                .AddGitHub(github =>
+                {
+                    var clientSecret = config.GetValue<string>("GitHub:ClientSecret") ??
+                                       throw new InvalidOperationException("GitHub:ClientSecret not specified");
+
+                    github
+                        .SetClientId(gitHubClientId)
+                        .SetClientSecret(clientSecret)
+                        .SetRedirectUri("github/signin/callback");
+                });
+        }
+
+        var discordClientId = config.GetValue<string>("Discord:ClientId") ??
+                              throw new InvalidOperationException("Discord:ClientId not specified");
+        if (!string.IsNullOrEmpty(discordClientId))
+        {
+            webProviders.AddDiscord(discord =>
             {
-                var clientId = config.GetValue<string>("GitHub:ClientId") ?? throw new InvalidOperationException("GitHub:ClientId not specified");
-                var clientSecret = config.GetValue<string>("GitHub:ClientSecret") ?? throw new InvalidOperationException("GitHub:ClientSecret not specified");
-                
-                github
-                    .SetClientId(clientId)
-                    .SetClientSecret(clientSecret)
-                    .SetRedirectUri("github/signin/callback");
-            })
-            .AddDiscord(discord =>
-            {
-                var clientId = config.GetValue<string>("Discord:ClientId") ?? throw new InvalidOperationException("Discord:ClientId not specified");
-                var clientSecret = config.GetValue<string>("Discord:ClientSecret") ?? throw new InvalidOperationException("Discord:ClientSecret not specified");
-                
+                var clientSecret = config.GetValue<string>("Discord:ClientSecret") ??
+                                   throw new InvalidOperationException("Discord:ClientSecret not specified");
+
                 discord
-                    .SetClientId(clientId)
+                    .SetClientId(discordClientId)
                     .SetClientSecret(clientSecret)
                     .SetRedirectUri("discord/signin/callback");
             });
+        }
+
+        var twitterClientId = config.GetValue<string>("Twitter:ClientId") ??
+                              throw new InvalidOperationException("Twitter:ClientId not specified");
+        if (!string.IsNullOrEmpty(twitterClientId))
+        {
+            webProviders.AddTwitter(twitter =>
+            {
+                var clientSecret = config.GetValue<string>("Twitter:ClientSecret") ??
+                                   throw new InvalidOperationException("Twitter:ClientSecret not specified");
+
+                twitter
+                    .SetClientId(twitterClientId)
+                    .SetClientSecret(clientSecret)
+                    .SetRedirectUri("twitter/signin/callback");
+            });
+        }
     });
+
 builder.Services.AddDbContext<OpenIddictDbContext>(options =>
 {
     // In memory is fine for our simple deployment

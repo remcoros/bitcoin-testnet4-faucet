@@ -15,6 +15,7 @@ public static class AuthenticationRoutes
 {
     private const string GitHubProvider = "GitHub";
     private const string DiscordProvider = "Discord";
+    private const string TwitterProvider = "Twitter";
     
     public static WebApplication MapAuthentication(this WebApplication app)
     {
@@ -42,12 +43,19 @@ public static class AuthenticationRoutes
             .WithName("github-signin");
         app.MapMethods("github/signin/callback", [HttpMethods.Get, HttpMethods.Post], GitHubSignInCallback);
 
-        // GitHub signin/callbacks
+        // Discord signin/callbacks
         app.MapGet("discord/signin",
                 () => Results.Challenge(new() { RedirectUri = "/" },
                     [Providers.Discord]))
             .WithName("discord-signin");
         app.MapMethods("discord/signin/callback", [HttpMethods.Get, HttpMethods.Post], DiscordSignInCallback);
+        
+        // Twitter signin/callbacks
+        app.MapGet("twitter/signin",
+                () => Results.Challenge(new() { RedirectUri = "/" },
+                    [Providers.Twitter]))
+            .WithName("twitter-signin");
+        app.MapMethods("twitter/signin/callback", [HttpMethods.Get, HttpMethods.Post], TwitterSignInCallback);
         
         return app;
     }
@@ -124,6 +132,41 @@ public static class AuthenticationRoutes
 
         var userHash = faucet.GenerateUserHash(DiscordProvider, userId);
         var identity = new ClaimsIdentity(authenticationType: DiscordProvider, nameType: ClaimTypes.Name, roleType: ClaimTypes.Role);
+        
+        // Add the hash of the user account and the account creation date as claims
+        identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, userHash));
+        identity.AddClaim(new Claim(FaucetClaimTypes.UserHash, userHash));
+        identity.AddClaim(new Claim(FaucetClaimTypes.AccountCreatedAt, createdAtDate.ToString("O")));
+
+        var properties = new AuthenticationProperties { RedirectUri = result.Properties!.RedirectUri };
+
+        return Results.SignIn(new ClaimsPrincipal(identity), properties);
+    }
+    
+    private static async Task<IResult> TwitterSignInCallback(HttpContext context, CancellationToken cancellationToken)
+    {
+        var faucet = context.RequestServices.GetRequiredService<FaucetServices>();
+
+        var result = await context.AuthenticateAsync(Providers.GitHub);
+        if (!result.Succeeded || result.Principal is null)
+        {
+            return Results.Unauthorized();
+        }
+       
+        var userId = result.Principal.FindFirstValue("id");
+        var createdAt = result.Principal.FindFirstValue("created_at");
+        if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(createdAt))
+        {
+            return Results.Unauthorized();
+        }
+        
+        if (!DateTimeOffset.TryParse(createdAt, CultureInfo.InvariantCulture, out var createdAtDate))
+        {
+            return Results.Unauthorized();
+        }
+
+        var userHash = faucet.GenerateUserHash(TwitterProvider, userId);
+        var identity = new ClaimsIdentity(authenticationType: TwitterProvider, nameType: ClaimTypes.Name, roleType: ClaimTypes.Role);
         
         // Add the hash of the user account and the account creation date as claims
         identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, userHash));

@@ -2,7 +2,7 @@
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
     <data-source source="LOCAL" name="app" uuid="812cccb9-d0a5-4646-95cd-d191efd932d5">
-      <driver-ref>sqlite.xerial</driver-ref>
+      <driver-ref>d504f889-3221-4296-8a5e-4ad9fe497d3e</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
       <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/Faucet.WebApp/Data/app.db</jdbc-url>
