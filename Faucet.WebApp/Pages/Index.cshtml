@@ -60,9 +60,11 @@
         <fieldset class="d-grid gap-2 form-fieldset @(Model.IsUserEligible ? "" : "disabled")">
             <div class="input-group has-validation">
                 <span class="input-group-text" id="addressLabel">Address</span>
-                <input type="text"
+                <input id="ReceivingAddress" type="text"
+                       name="ReceivingAddress"
+                       asp-for="ReceivingAddress"
                        class="form-control @(ViewData.ModelState[nameof(Model.ReceivingAddress)]?.Errors.Count > 0 ? "is-invalid" : "")"
-                       id="ReceivingAddress" name="ReceivingAddress" placeholder="tb1q..." aria-label="Address"
+                       placeholder="tb1q..." aria-label="Address"
                        aria-describedby="addressLabel">
                 <button class="btn btn-outline-primary d-none d-md-block" type="submit">Request Testnet4 Coins</button>
                 <div class="invalid-feedback">
@@ -71,7 +73,7 @@
             </div>
             <button class="btn btn-outline-primary d-block d-md-none" type="submit">Request Testnet4 Coins</button>
             <div class="text-center text-muted small">
-                <span>balance: @Model.WalletBalance.ToUnit(MoneyUnit.BTC)</span>
+                <span>balance: @Model.WalletBalance.ToUnit(MoneyUnit.BTC) tBTC</span>
             </div>
         </fieldset>
     </form>
@@ -104,7 +106,7 @@
             @(Money.Satoshis(FaucetOptions.InitialPayout).ToUnit(MoneyUnit.BTC)) tBTC, decaying
             to @(Money.Satoshis(FaucetOptions.MinimumPayout).ToUnit(MoneyUnit.BTC)) tBTC.
         </p>
-        
+
         <h2>Privacy</h2>
         <p>
             The faucet uses OAuth to authenticate users. It does not store any personal information. A unique

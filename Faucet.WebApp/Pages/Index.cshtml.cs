@@ -72,7 +72,7 @@ public class IndexModel(ILogger<IndexModel> log, FaucetServices faucetServices, 
         }
 
         // Validation
-        BitcoinAddress receivingAddress = null!;
+        BitcoinAddress receivingAddress;
         try
         {
             receivingAddress = BitcoinAddress.Create(ReceivingAddress, Bitcoin.Instance.Testnet4);

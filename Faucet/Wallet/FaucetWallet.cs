@@ -1,9 +1,9 @@
 ﻿using System.Net;
 using System.Text;
+using Faucet.Utilities;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Primitives;
 using NBitcoin;
 using NBitcoin.RPC;
 
@@ -54,7 +54,7 @@ public class FaucetWallet
             HttpClient = new HttpClient(new HttpClientHandler()
             {
                 // ignore ssl certificate errors
-                ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true
+                ServerCertificateCustomValidationCallback = (_, _, _, _) => true
             })
         };
         
@@ -150,12 +150,17 @@ public class FaucetWallet
 
     public async Task<Money> GetBalanceAsync(CancellationToken cancellationToken = default)
     {
-        return await _memoryCache.GetOrCreateAsync(WalletBalanceCacheKey, async entry =>
+        var cachedValue = _memoryCache.GetOrCreate(WalletBalanceCacheKey, entry =>
         {
             entry.SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
 
-            var unspent = await GetUnspentCoinsAsync(cancellationToken);
-            return unspent.Sum(x => x.Amount);
+            return new AsyncLazy<Money>(async () =>
+            {
+                var unspent = await GetUnspentCoinsAsync(cancellationToken);
+                return unspent.Sum(x => x.Amount);
+            });
         });
+
+        return await cachedValue!.Value;
     }
 }
