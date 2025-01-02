@@ -17,6 +17,7 @@ public class IndexModel(ILogger<IndexModel> log, FaucetServices faucetServices, 
     [BindProperty]
     public string ReceivingAddress { get; set; } = string.Empty;
     public Money WalletBalance { get; set; } = Money.Satoshis(0);
+    public Money NextPayoutAmount { get; set; } = Money.Satoshis(0);
     public bool IsUserAuthenticated { get; set; }
     public bool IsUserEligible { get; set; }
     public string? NotEligibleReason { get; set; }
@@ -120,5 +121,6 @@ public class IndexModel(ILogger<IndexModel> log, FaucetServices faucetServices, 
         }
 
         WalletBalance = await wallet.GetBalanceAsync(cancellationToken);
+        NextPayoutAmount = await faucetServices.GetNextPayoutAmount(cancellationToken);
     }
 }

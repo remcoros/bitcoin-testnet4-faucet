@@ -5,6 +5,7 @@ using Faucet.Data;
 using Faucet.Utilities;
 using Faucet.Wallet;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 
@@ -12,15 +13,18 @@ namespace Faucet;
 
 public class FaucetServices
 {
+    private const string NextPayoutAmountCacheKey = "NextPayoutAmount";
     private static readonly SemaphoreSlim s_requestTrackerLock = new(1, 1);
+    private readonly IMemoryCache _memoryCache;
     private readonly FaucetDbContext _dbContext;
     private readonly FaucetWallet _wallet;
     private readonly FaucetOptions _options;
     private readonly FaucetPayoutCalculator _payoutCalculator;
 
-    public FaucetServices(IOptions<FaucetOptions> options, FaucetDbContext dbContext, FaucetWallet wallet)
+    public FaucetServices(IOptions<FaucetOptions> options, IMemoryCache memoryCache, FaucetDbContext dbContext, FaucetWallet wallet)
     {
         _options = options.Value;
+        _memoryCache = memoryCache;
         _dbContext = dbContext;
         _wallet = wallet;
         _payoutCalculator =
@@ -115,6 +119,8 @@ public class FaucetServices
                 historyEntry.TransactionId = transactionId;
                 await _dbContext.SaveChangesAsync(CancellationToken.None);
             
+                _memoryCache.Remove(NextPayoutAmountCacheKey);
+                
                 return transactionId;
             }
             catch(Exception)
@@ -131,7 +137,25 @@ public class FaucetServices
             s_requestTrackerLock.Release();
         }
     }
-    
+
+    public async Task<Money> GetNextPayoutAmount(CancellationToken cancellationToken = default)
+    {
+        var cachedValue = _memoryCache.GetOrCreate(NextPayoutAmountCacheKey, entry =>
+        {
+            entry.SetAbsoluteExpiration(TimeSpan.FromMinutes(60));
+
+            return new AsyncLazy<Money>(async () =>
+            {
+                var requestCount = await _dbContext.TransactionHistory.CountAsync(cancellationToken) + 1;
+                var amountToSend = Money.Satoshis(_payoutCalculator.CalculatePayout(requestCount));
+
+                return amountToSend;
+            });
+        });
+
+        return await cachedValue!.Value;
+    }
+
     private async Task<bool> UserHasReceivedCoinsAsync(string userHash)
     {
         return await _dbContext.TransactionHistory.AnyAsync(i => i.UserHash == userHash);

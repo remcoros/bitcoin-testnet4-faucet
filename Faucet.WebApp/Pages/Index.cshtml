@@ -72,8 +72,19 @@
                 </div>
             </div>
             <button class="btn btn-outline-primary d-block d-md-none" type="submit">Request Testnet4 Coins</button>
-            <div class="text-center text-muted small">
-                <span>balance: @Model.WalletBalance.ToUnit(MoneyUnit.BTC) tBTC</span>
+            <div class="text-muted small">
+                <table class="mx-auto w-auto">
+                    <tbody>
+                    <tr>
+                        <td>balance:</td>
+                        <td class="text-end">@Model.WalletBalance.ToUnit(MoneyUnit.BTC) tBTC</td>
+                    </tr>
+                    <tr>
+                        <td>next payout:</td>
+                        <td class="text-end">@Model.NextPayoutAmount.ToUnit(MoneyUnit.BTC) tBTC</td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
         </fieldset>
     </form>
