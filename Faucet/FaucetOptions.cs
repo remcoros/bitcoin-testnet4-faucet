@@ -6,6 +6,7 @@ namespace Faucet;
 
 public class FaucetOptions : IOptions<FaucetOptions>
 {
+    [Required] public required string ConnectionString { get; set; }
     [Required] public required string FaucetSecretSalt { get; set; }
     [Required] public required string RpcHost { get; set; }
 
@@ -31,21 +32,21 @@ public class FaucetOptions : IOptions<FaucetOptions>
     /// </summary>
     [Required]
     [Range(10_000, long.MaxValue)]
-    public long InitialPayout { get; set; }
+    public long InitialPayout { get; set; } = 10000000;
 
     /// <summary>
     /// Minimum payout amount in satoshis.
     /// </summary>
     [Required]
     [Range(10_000, long.MaxValue)]
-    public long MinimumPayout { get; set; }
+    public long MinimumPayout { get; set; } = 1000000;
 
     /// <summary>
     /// Decay rate for exponential decay.
     /// </summary>
     [Required]
     [Range(0, 1)]
-    public double DecayRate { get; set; }
+    public double DecayRate { get; set; } = 0.001;
 
     /// <summary>
     /// Optional OP_RETURN data to include in the faucet transactions.

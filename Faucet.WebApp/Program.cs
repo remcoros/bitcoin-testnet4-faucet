@@ -1,6 +1,5 @@
 using Faucet;
 using Faucet.Data;
-using Faucet.Wallet;
 using Microsoft.EntityFrameworkCore;
 using Faucet.WebApp.Routes;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -11,9 +10,6 @@ var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
 
 // Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-                       throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddMemoryCache();
@@ -121,15 +117,14 @@ builder.Services.AddDbContext<OpenIddictDbContext>(options =>
 });
 
 // Faucet services
-builder.Services.AddOptions<FaucetOptions>()
-    .Bind(config.GetSection("Faucet"))
-    .ValidateDataAnnotations()
-    .ValidateOnStart();
-builder.Services.AddTransient<FaucetOptions>(x => x.GetRequiredService<IOptions<FaucetOptions>>().Value);
-builder.Services.AddDbContext<FaucetDbContext>(options => options.UseSqlite(connectionString));
-builder.Services.AddSingleton<FaucetWallet>();
-builder.Services.AddScoped<FaucetServices>();
+builder.Services.AddFaucetServices(opts => builder.Configuration.GetSection("Faucet").Bind(opts));
+builder.Services.ConfigureDbContext<FaucetDbContext>((sp, options) =>
+{
+    var connectionString = sp.GetRequiredService<IOptions<FaucetOptions>>().Value.ConnectionString;
+    options.UseSqlite(connectionString);
+});
 
+// Build the app
 var app = builder.Build();
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions

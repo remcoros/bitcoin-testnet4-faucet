@@ -17,19 +17,20 @@ public class FaucetWallet
     private readonly FaucetOptions _options;
     private readonly BitcoinAddress _faucetAddress;
     private readonly SemaphoreSlim _walletLock = new(1, 1);
-    private readonly RPCClient _rpcClient;
+    private RPCClient? _rpcClient;
     private readonly byte[]? _opReturnData;
     private readonly ILogger<FaucetWallet> _log;
     private readonly IMemoryCache _memoryCache;
-    
+    private readonly IHttpClientFactory _httpClientFactory;
+
     public FeeRate FeeRate { get; } = new(1m);
 
-    public FaucetWallet(ILogger<FaucetWallet> log, IOptions<FaucetOptions> options, IMemoryCache memoryCache)
+    public FaucetWallet(ILogger<FaucetWallet> log, IOptions<FaucetOptions> options, IMemoryCache memoryCache, IHttpClientFactory httpClientFactory)
     {
         _log = log;
         _memoryCache = memoryCache;
+        _httpClientFactory = httpClientFactory;
         _options = options.Value;
-        _rpcClient = CreateRpcClient();
         
         try
         {
@@ -46,21 +47,6 @@ public class FaucetWallet
         }
     }
     
-    private RPCClient CreateRpcClient()
-    {
-        var credentials = new NetworkCredential(_options.RpcUsername, _options.RpcPassword);
-        var rpcClient = new RPCClient(credentials, new Uri(_options.RpcHost), _network)
-        {
-            HttpClient = new HttpClient(new HttpClientHandler()
-            {
-                // ignore ssl certificate errors
-                ServerCertificateCustomValidationCallback = (_, _, _, _) => true
-            })
-        };
-        
-        return rpcClient;
-    }
-
     public async Task<string> SendAmountAsync(string receivingAddress, Money amount, CancellationToken cancellationToken = default)
     {
         // lock the wallet
@@ -94,7 +80,7 @@ public class FaucetWallet
             return txId;
         }
 
-        var rpcTxId = (await _rpcClient.SendRawTransactionAsync(transaction, cancellationToken)).ToString();
+        var rpcTxId = (await GetRpcClient().SendRawTransactionAsync(transaction, cancellationToken)).ToString();
         _log.LogInformation("Broadcasted transaction {TransactionId}", rpcTxId);
         
         return txId;
@@ -142,10 +128,24 @@ public class FaucetWallet
 
     public async Task<List<UnspentCoin>> GetUnspentCoinsAsync(CancellationToken cancellationToken = default)
     {
-        var unspentCoins = await _rpcClient.ListUnspentAsync(0, int.MaxValue, _faucetAddress)
+        var rpcClient = GetRpcClient();
+        var unspentCoins = await rpcClient.ListUnspentAsync(0, int.MaxValue, _faucetAddress)
             .WithCancellation(cancellationToken);
 
         return unspentCoins.OrderByDescending(x => x.Confirmations).ToList();
+    }
+
+    private RPCClient GetRpcClient()
+    {
+        if (_rpcClient is null)
+        {
+            var credentials = new NetworkCredential(_options.RpcUsername, _options.RpcPassword);
+            var rpcClient = new RPCClient(credentials, new Uri(_options.RpcHost), _network);
+            _rpcClient = rpcClient;
+        }
+        
+        _rpcClient.HttpClient = _httpClientFactory.CreateClient(nameof(FaucetWallet));
+        return _rpcClient;
     }
 
     public async Task<Money> GetBalanceAsync(CancellationToken cancellationToken = default)
